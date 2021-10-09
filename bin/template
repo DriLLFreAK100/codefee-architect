@@ -1,0 +1,12 @@
+#! /usr/bin/env node
+const yargs = require("yargs");
+require = require('esm')(module /*, options*/);
+
+const usage = "\nUsage: Template Generation";
+const options = yargs
+  .usage(usage)
+  .option("t", { alias: "type", describe: "Template type to generate", type: "string", demandOption: false })
+  .help(true)
+  .argv;
+
+require('../src/template').default(yargs.argv);

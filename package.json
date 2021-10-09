@@ -1,0 +1,17 @@
+{
+  "name": "@codefee/architect",
+  "version": "1.0.0",
+  "description": "CLI for Template Generations, etc.",
+  "main": "bin/index.js",
+  "bin": {
+    "template": "./bin/template"
+  },
+  "scripts": {},
+  "author": "drillfreak100",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "esm": "^3.2.25",
+    "yargs": "^17.2.1"
+  }
+}

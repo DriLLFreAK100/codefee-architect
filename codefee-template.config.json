@@ -1,0 +1,8 @@
+{
+  "baseDir": "./src/components",
+  "templates": {
+    "styled-component": {
+      "alias": "sc"
+    }
+  }
+}
