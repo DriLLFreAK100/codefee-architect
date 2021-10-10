@@ -9,6 +9,8 @@ import { Pipeline } from '../utils';
 import { CONFIG_FILE_NAME, TEMPLATE_FOLDER_NAME } from './constants';
 import defaultConfig from '../../codefee-template.config.json';
 
+const log = console.log;
+
 const cli = async (args) => {
   const pipeline = new Pipeline().add(setup);
 
@@ -26,7 +28,7 @@ const cli = async (args) => {
 }
 
 const print = (msg) => () => {
-  console.log(msg);
+  log(msg);
 }
 
 const templateConfigQuestions = [
@@ -84,12 +86,19 @@ const setup = () => {
 
 const generate = (type, name) => async () => {
   const configs = JSON.parse(await fs.promises.readFile(CONFIG_FILE_NAME));
-  const config = Object.entries(configs.templates).filter(([name, { alias }]) => (name === type || alias === type))[0];
+  const targetTemplate = type || configs.default;
+
+  const config = Object
+    .entries(configs.templates)
+    .filter(([
+      name,
+      { alias },
+    ]) => (name === targetTemplate || alias === targetTemplate))[0];
 
   if (!config) {
-    console.log(chalk`
-      {red Template "${type}" is not found.}
-      Make sure the template has been setup at {yellow ${TEMPLATE_FOLDER_NAME}}
+    log(chalk`
+      {red Template config "${targetTemplate}" is not found.}
+      Make sure the template has been setup at {yellow ${CONFIG_FILE_NAME}}
     `);
 
     return;
@@ -97,7 +106,18 @@ const generate = (type, name) => async () => {
 
   const outputPath = path.normalize(`${process.cwd()}/${configs.baseDir}/${name}`);
   const templatePath = path.normalize(`${process.cwd()}/${TEMPLATE_FOLDER_NAME}/${config[0]}`);
-  const templateEntry = await import(templatePath);
+
+  let templateEntry = undefined;
+
+  try {
+    templateEntry = await import(templatePath);
+  } catch {
+    log(chalk`
+    {red Template instruction "${targetTemplate}" missing in ${TEMPLATE_FOLDER_NAME}.}
+    Make sure the template has been setup at {yellow ${TEMPLATE_FOLDER_NAME}}
+  `);
+    return;
+  }
 
   templateEntry.default(
     path.normalize(outputPath),
