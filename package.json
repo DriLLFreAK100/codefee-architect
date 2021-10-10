@@ -10,9 +10,11 @@
   "author": "drillfreak100",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^4.1.2",
-    "esm": "^3.2.25",
-    "fs-extra": "^10.0.0",
-    "yargs": "^17.2.1"
+    "chalk": "4.1.2",
+    "esm": "3.2.25",
+    "fs-extra": "10.0.0",
+    "inquirer": "8.2.0",
+    "lodash": "4.17.21",
+    "yargs": "17.2.1"
   }
 }

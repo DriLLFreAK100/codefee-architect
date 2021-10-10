@@ -1,7 +1,9 @@
 import '../polyfills';
 import chalk from 'chalk';
+import cloneDeep from 'lodash/cloneDeep';
 import fs from 'fs';
 import fse from 'fs-extra';
+import inquirer from 'inquirer';
 import path from 'path';
 import { Pipeline } from '../utils';
 import { CONFIG_FILE_NAME, TEMPLATE_FOLDER_NAME } from './constants';
@@ -27,6 +29,41 @@ const print = (msg) => () => {
   console.log(msg);
 }
 
+const templateConfigQuestions = [
+  {
+    name: 'baseDir',
+    message: 'Base Directory for Template Generation (default - ./src):'
+  }
+];
+
+const scaffoldConfigFile = () => {
+  return inquirer
+    .prompt(templateConfigQuestions)
+    .then(({ baseDir }) => {
+      let config = cloneDeep(defaultConfig);
+      config.baseDir = baseDir || './src';
+
+      return config;
+    })
+    .then((config) => {
+      fs.promises.writeFile(CONFIG_FILE_NAME, JSON.stringify(config, undefined, 2))
+    });
+}
+
+const scaffoldTemplateFolder = () => {
+  return fs.promises
+    .mkdir(TEMPLATE_FOLDER_NAME)
+    .then(() => {
+      return fse.copy(
+        path.normalize(`${__dirname}/../../${TEMPLATE_FOLDER_NAME}`),
+        path.normalize(`${process.cwd()}/${TEMPLATE_FOLDER_NAME}`),
+        {
+          recursive: true,
+        }
+      );
+    });
+}
+
 const setup = () => {
   return fs.promises
     .readdir(`.${path.sep}`)
@@ -34,25 +71,14 @@ const setup = () => {
       const innerTasks = [];
 
       if (!files.some(f => f === CONFIG_FILE_NAME)) {
-        innerTasks.push(fs.promises.writeFile(CONFIG_FILE_NAME, JSON.stringify(defaultConfig, undefined, 2)));
+        innerTasks.push(scaffoldConfigFile());
       }
 
       if (!files.some(f => f === TEMPLATE_FOLDER_NAME)) {
-        const scaffoldTemplateFolder = fs.promises.mkdir(TEMPLATE_FOLDER_NAME)
-          .then(() => {
-            return fse.copy(
-              path.normalize(`${__dirname}/../../${TEMPLATE_FOLDER_NAME}`),
-              path.normalize(`${process.cwd()}/${TEMPLATE_FOLDER_NAME}`),
-              {
-                recursive: true,
-              }
-            );
-          });
-
-        innerTasks.push(scaffoldTemplateFolder);
+        innerTasks.push(scaffoldTemplateFolder());
       }
 
-      return innerTasks;
+      return Promise.all(innerTasks);
     });
 };
 
