@@ -1,12 +1,20 @@
 #! /usr/bin/env node
-const yargs = require("yargs");
+const yargs = require('yargs');
 require = require('esm')(module /*, options*/);
+const yargsBuildExample = require('../src/utils').yargsBuildExample;
 
-const usage = "\nUsage: Template Generation";
 const options = yargs
-  .usage(usage)
-  .option("t", { alias: "type", describe: "Template type to generate", type: "string", demandOption: false })
+  .usage('\nUsage: Template Generation')
   .help(true)
-  .argv;
+  .option('t', { alias: 'type', describe: 'Template type to generate', type: 'string', demandOption: false });
+
+yargsBuildExample(options, [
+  {
+    command: 'template -t [styled-component | sc] ComponentName',
+    description: 'Generate Styled-Component Template',
+  }
+]);
+
+options.argv;
 
 require('../src/template').default(yargs.argv);
