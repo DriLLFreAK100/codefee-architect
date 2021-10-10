@@ -1,15 +1,30 @@
 import '../polyfills';
 import chalk from 'chalk';
 import fs from 'fs';
+import fse from 'fs-extra';
 import path from 'path';
 import { Pipeline } from '../utils';
 import { CONFIG_FILE_NAME, TEMPLATE_FOLDER_NAME } from './constants';
+import defaultConfig from '../../codefee-template.config.json';
 
 const cli = async (args) => {
-  await new Pipeline()
-    .add(setup)
+  const pipeline = new Pipeline().add(setup);
+
+  if (args.init) {
+    await pipeline
+      .add(print(chalk`{green Template Init Successfully}`))
+      .execute();
+
+    return;
+  }
+
+  await pipeline
     .add(generate(args.type, args._))
     .execute();
+}
+
+const print = (msg) => () => {
+  console.log(msg);
 }
 
 const setup = () => {
@@ -19,13 +34,25 @@ const setup = () => {
       const innerTasks = [];
 
       if (!files.some(f => f === CONFIG_FILE_NAME)) {
-        console.log(files);
-        innerTasks.push(fs.promises.writeFile(CONFIG_FILE_NAME, JSON.stringify({})));
+        innerTasks.push(fs.promises.writeFile(CONFIG_FILE_NAME, JSON.stringify(defaultConfig, undefined, 2)));
       }
 
       if (!files.some(f => f === TEMPLATE_FOLDER_NAME)) {
-        innerTasks.push(fs.promises.mkdir(TEMPLATE_FOLDER_NAME));
+        const scaffoldTemplateFolder = fs.promises.mkdir(TEMPLATE_FOLDER_NAME)
+          .then(() => {
+            return fse.copy(
+              path.normalize(`${__dirname}/../../${TEMPLATE_FOLDER_NAME}`),
+              path.normalize(`${process.cwd()}/${TEMPLATE_FOLDER_NAME}`),
+              {
+                recursive: true,
+              }
+            );
+          });
+
+        innerTasks.push(scaffoldTemplateFolder);
       }
+
+      return innerTasks;
     });
 };
 

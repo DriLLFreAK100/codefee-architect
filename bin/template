@@ -6,6 +6,7 @@ const yargsBuildExample = require('../src/utils').yargsBuildExample;
 const options = yargs
   .usage('\nUsage: Template Generation')
   .help(true)
+  .option('init', { describe: 'Init Template Configs', type: 'boolean', demandOption: false })
   .option('t', { alias: 'type', describe: 'Template type to generate', type: 'string', demandOption: false });
 
 yargsBuildExample(options, [
