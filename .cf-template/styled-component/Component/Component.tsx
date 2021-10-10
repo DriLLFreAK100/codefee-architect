@@ -1,5 +1,5 @@
 import React, { forwardRef, HtmlHTMLAttributes } from 'react';
-import * as S from './#Component.style.tsx';
+import * as S from './#Component.styled';
 
 interface #ComponentProps extends HtmlHTMLAttributes<HTMLDivElement> {
 }
