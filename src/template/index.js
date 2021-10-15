@@ -111,7 +111,9 @@ const generate = (type, name) => async () => {
 
   try {
     templateEntry = await import(templatePath);
-  } catch {
+  } catch (ex) {
+    log(ex)
+
     log(chalk`
     {red Template instruction "${targetTemplate}" missing in ${TEMPLATE_FOLDER_NAME}.}
     Make sure the template has been setup at {yellow ${TEMPLATE_FOLDER_NAME}}
