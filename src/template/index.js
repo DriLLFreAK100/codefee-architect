@@ -1,15 +1,23 @@
-import '../polyfills';
 import chalk from 'chalk';
 import cloneDeep from 'lodash/cloneDeep';
 import fs from 'fs';
 import fse from 'fs-extra';
 import inquirer from 'inquirer';
 import path from 'path';
-import { Pipeline } from '../utils';
+import { Pipeline } from '../utils/pipeline.util';
 import { CONFIG_FILE_NAME, TEMPLATE_FOLDER_NAME } from './constants';
 import defaultConfig from '../../codefee-template.config.json';
 
 const log = console.log;
+
+const print = (msg) => () => log(msg);
+
+const templateConfigQuestions = [
+  {
+    name: 'baseDir',
+    message: 'Base Directory for Template Generation (default - ./src):'
+  }
+];
 
 const cli = async (args) => {
   const pipeline = new Pipeline().add(setup);
@@ -26,17 +34,6 @@ const cli = async (args) => {
     .add(generate(args.type, args._))
     .execute();
 }
-
-const print = (msg) => () => {
-  log(msg);
-}
-
-const templateConfigQuestions = [
-  {
-    name: 'baseDir',
-    message: 'Base Directory for Template Generation (default - ./src):'
-  }
-];
 
 const scaffoldConfigFile = () => {
   return inquirer
@@ -111,7 +108,9 @@ const generate = (type, name) => async () => {
 
   try {
     templateEntry = await import(templatePath);
-  } catch {
+  } catch (ex) {
+    log(ex);
+
     log(chalk`
     {red Template instruction "${targetTemplate}" missing in ${TEMPLATE_FOLDER_NAME}.}
     Make sure the template has been setup at {yellow ${TEMPLATE_FOLDER_NAME}}

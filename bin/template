@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 const yargs = require('yargs');
 require = require('esm')(module);
-const yargsBuildExample = require('../src/utils').yargsBuildExample;
+const yargsBuildExample = require('../src/utils/yargs.util').yargsBuildExample;
 
 const options = yargs
   .usage('\nUsage: Template Generation')
