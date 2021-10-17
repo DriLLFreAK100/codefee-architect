@@ -28,7 +28,7 @@ export class PlainCopyStrategy {
             modifiedFileName.splice(0, this.targetName);
 
             await fs.promises.writeFile(
-              `${this.outputPath}/${modifiedFileName}`,
+              `${this.outputPath}/${modifiedFileName.join('.').toString()}`,
               this.replaceContent(content, this.templateReplaceKey, this.targetName)
             );
 

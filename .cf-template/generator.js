@@ -27,7 +27,7 @@ export class Generator {
     const existing = await fs.promises.readdir(outputDir);
 
     if (existing.some(e => e === targetName)) {
-      printFail(`Target with name ${targetName} already exists`);
+      this.printFail(`Target with name ${targetName} already exists`);
       return false;
     }
 

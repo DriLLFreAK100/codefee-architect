@@ -5,8 +5,9 @@ import fse from 'fs-extra';
 import inquirer from 'inquirer';
 import path from 'path';
 import { Pipeline } from '../utils/pipeline.util';
-import { CONFIG_FILE_NAME, TEMPLATE_FOLDER_NAME } from './constants';
+import { CONFIG_FILE_NAME, TEMPLATE_FOLDER_NAME, METADATA_LOCATION } from './constants';
 import defaultConfig from '../../codefee-template.config.json';
+import pkg from '../../package.json';
 
 const log = console.log;
 
@@ -20,7 +21,9 @@ const templateConfigQuestions = [
 ];
 
 const cli = async (args) => {
-  const pipeline = new Pipeline().add(setup);
+  const pipeline = new Pipeline()
+    .add(preSetupCheck)
+    .add(setup);
 
   if (args.init) {
     await pipeline
@@ -35,32 +38,48 @@ const cli = async (args) => {
     .execute();
 }
 
-const scaffoldConfigFile = () => {
-  return inquirer
-    .prompt(templateConfigQuestions)
-    .then(({ baseDir }) => {
-      let config = cloneDeep(defaultConfig);
-      config.baseDir = baseDir || './src';
+const scaffoldConfigFile = () => inquirer
+  .prompt(templateConfigQuestions)
+  .then(({ baseDir }) => {
+    let config = cloneDeep(defaultConfig);
+    config.baseDir = baseDir || './src';
 
-      return config;
-    })
-    .then((config) => {
-      fs.promises.writeFile(CONFIG_FILE_NAME, JSON.stringify(config, undefined, 2))
-    });
-}
+    return config;
+  })
+  .then((config) => {
+    fs.promises.writeFile(CONFIG_FILE_NAME, JSON.stringify(config, undefined, 2))
+  });
 
-const scaffoldTemplateFolder = () => {
-  return fs.promises
-    .mkdir(TEMPLATE_FOLDER_NAME)
-    .then(() => {
-      return fse.copy(
-        path.normalize(`${__dirname}/../../${TEMPLATE_FOLDER_NAME}`),
-        path.normalize(`${process.cwd()}/${TEMPLATE_FOLDER_NAME}`),
-        {
-          recursive: true,
-        }
-      );
-    });
+const scaffoldTemplateFolder = () => fs.promises
+  .mkdir(TEMPLATE_FOLDER_NAME)
+  .then(() => {
+    return fse.copy(
+      path.normalize(`${__dirname}/../../${TEMPLATE_FOLDER_NAME}`),
+      path.normalize(`${process.cwd()}/${TEMPLATE_FOLDER_NAME}`),
+      {
+        recursive: true,
+      }
+    );
+  });
+
+const scaffoldMetadata = () => fs.promises.writeFile(
+  path.normalize(METADATA_LOCATION),
+  JSON.stringify({
+    version: pkg.version,
+  }),
+);
+
+const preSetupCheck = async () => {
+  const existingMetadataFile = path.normalize(`./${METADATA_LOCATION}`);
+
+  if (fs.existsSync(existingMetadataFile)) {
+    const existingMetadata = JSON.parse(await fs.promises.readFile(existingMetadataFile));
+
+    if (existingMetadata.version !== pkg.version) {
+      await fs.promises.rm(TEMPLATE_FOLDER_NAME, { recursive: true });
+      await fs.promises.rm(CONFIG_FILE_NAME);
+    }
+  }
 }
 
 const setup = () => {
@@ -75,6 +94,7 @@ const setup = () => {
 
       if (!files.some(f => f === TEMPLATE_FOLDER_NAME)) {
         innerTasks.push(scaffoldTemplateFolder());
+        innerTasks.push(scaffoldMetadata());
       }
 
       return Promise.all(innerTasks);
